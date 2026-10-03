@@ -23,7 +23,7 @@
  * "=1+1" coming from an uploaded report is stored as text and never evaluated.
  */
 
-var BACKEND_VERSION = '1.1.0';
+var BACKEND_VERSION = '1.1.1';
 var TXN_PAGE_MAX = 20000;
 /** Google Sheets rejects a cell longer than 50,000 characters. */
 var MAX_CELL_CHARS = 49000;
@@ -365,6 +365,7 @@ var ACTIONS = {
         if (types[r][0] !== t) { types[r][0] = t; changed++; }
       }
       if (changed) {
+        for (var i = 0; i < count; i++) types[i][0] = textCell_(String(types[i][0]));
         sheet.getRange(2, typeCol, count, 1).setValues(types);
         bumpDataVersion_();
       }
@@ -392,6 +393,7 @@ var ACTIONS = {
         }
       }
       if (changed) {
+        for (var j = 0; j < count; j++) states[j][0] = textCell_(String(states[j][0]));
         sheet.getRange(2, stateCol, count, 1).setValues(states);
         bumpDataVersion_();
       }
@@ -483,6 +485,12 @@ function formatsFor_(name, nRows) {
   return out;
 }
 
+/** Text exactly as setValues must receive it so the cell reads back as `text` (see cleanRows_). */
+function textCell_(text) {
+  var first = text.charAt(0);
+  return first === "'" || first === '=' ? "'" + text : text;
+}
+
 function cleanRows_(name, rows) {
   var def = TABLES[name];
   var isNum = [];
@@ -501,8 +509,10 @@ function cleanRows_(name, rows) {
           throw new Error(name + ' row ' + r + ', column "' + def.headers[k] + '": text is ' + text.length + ' characters; a cell holds at most ' + MAX_CELL_CHARS + '.');
         }
         // Sheets consumes ONE leading apostrophe as a "this is text" marker. Doubling it
-        // keeps a value that genuinely starts with an apostrophe intact.
-        row.push(text.charAt(0) === "'" ? "'" + text : text);
+        // keeps a value that genuinely starts with an apostrophe intact. A value starting
+        // with "=" is evaluated as a formula by setValues even in a plain-text cell, so it
+        // also gets the apostrophe marker and is stored as text.
+        row.push(textCell_(text));
       }
     }
     out.push(row);
