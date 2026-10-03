@@ -200,7 +200,7 @@ export const useStore = create<AppState>((set, get) => {
 
   const loadSheets = async (conn: SheetsConnection) => {
     const c = new SheetsClient(conn);
-    set({ busy: { label: 'Loading from Google Sheets', progress: null } });
+    set({ busy: { label: 'Data Loading', progress: null } });
     const boot = await c.bootstrap();
     let mappings = boot.mappings.map(rowToMapping);
     if (!mappings.length) {
@@ -220,7 +220,7 @@ export const useStore = create<AppState>((set, get) => {
       txns = [];
       let total = boot.transactionCount;
       for (let offset = 0; offset < total; offset += PAGE) {
-        set({ busy: { label: `Loading transactions from Google Sheets (${txns.length.toLocaleString('en-IN')} of ${total.toLocaleString('en-IN')})`, progress: total ? offset / total : null } });
+        set({ busy: { label: `Data Loading (${txns.length.toLocaleString('en-IN')} of ${total.toLocaleString('en-IN')})`, progress: total ? offset / total : null } });
         const page = await c.getTransactions(offset, PAGE);
         total = page.total;
         dataVersion = page.dataVersion;
