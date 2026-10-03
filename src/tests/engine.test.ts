@@ -188,6 +188,11 @@ describe('11-12. SKU normalisation', () => {
     expect(normalizeSku('SKU:SKU:X')).toBe('SKU:X');
     expect(normalizeSku('SKUOC-07')).toBe('SKUOC-07');
     expect(normalizeSku('A - B_c/1')).toBe('A - B_c/1');
+    // Flipkart wraps the cell in triple quotes: """SKU:OC-HURRICANE-GREY-1"""
+    expect(normalizeSku('"""SKU:OC-HURRICANE-GREY-1"""')).toBe('OC-HURRICANE-GREY-1');
+    expect(normalizeSku('"SKU:2-15-BROWN"')).toBe('2-15-BROWN');
+    expect(normalizeSku('""OC-07')).toBe('""OC-07'); // unbalanced quotes are kept
+    expect(normalizeSku('A"B')).toBe('A"B');
   });
   it('flags blank SKUs for review and keeps the row', () => {
     const p = parseRows([row({ sku: '' }), row({ orderItemId: 'I2', sku: '   ' }), row({ orderItemId: 'I3', sku: 'SKU:' })]);
