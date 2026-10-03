@@ -1,4 +1,4 @@
-# Marketplace Analytics — e-commerce analytics & profitability dashboard
+# Ecom Analytics — e-commerce analytics & profitability dashboard
 
 A static web app (React + TypeScript) that turns marketplace sales reports into
 revenue, returns, SKU, state and profitability analytics. It is hosted on
