@@ -1,0 +1,57 @@
+name: Test, build and deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
+      - name: Unit tests (financial calculations, importer, Sheets backend logic)
+        run: npm test
+      - name: Type-check and build
+        run: npm run build
+        env:
+          # Public Apps Script web app URL, pre-filled in Settings -> Google Sheets.
+          # The access token is NOT stored here; enter it in the app.
+          VITE_DEFAULT_SHEETS_URL: https://script.google.com/macros/s/AKfycbzamJbird_KELvRApFCOGknm40D62krh-j0TBT7gc8GIfwNlIhBNCnLkuMC4pahfmg/exec
+      - name: Browser smoke test against the production build
+        run: |
+          npx playwright install --with-deps chromium
+          npm run fixture
+          npm run smoke
+      - uses: actions/configure-pages@v5
+        if: github.event_name != 'pull_request'
+      - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request'
+        with:
+          path: dist
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
