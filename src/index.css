@@ -1,0 +1,126 @@
+@import '@fontsource/ibm-plex-sans/latin-400.css';
+@import '@fontsource/ibm-plex-sans/latin-500.css';
+@import '@fontsource/ibm-plex-sans/latin-600.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Tokens. UI colours are stored as RGB triplets so Tailwind opacity modifiers
+ * work. Chart series colours are plain hex and were checked with the dataviz
+ * palette validator in both modes:
+ *   sales = blue, returns = orange, cancellations = aqua, net / profit = violet.
+ * A series keeps its colour on every page; colours are never assigned by rank.
+ */
+:root {
+  color-scheme: light;
+  --page: 246 246 243;
+  --surface: 253 253 252;
+  --sunken: 240 240 236;
+  --ink: 20 23 28;
+  --ink-2: 77 79 82;
+  --ink-3: 122 122 116;
+  --line: 226 225 218;
+  --line-strong: 199 198 190;
+  --accent: 29 43 79;
+  --accent-ink: 255 255 255;
+  --accent-soft: 231 234 243;
+  --good: 0 99 0;
+  --warn: 146 92 0;
+  --bad: 184 44 44;
+
+  --s-sales: #2a78d6;
+  --s-returns: #eb6834;
+  --s-cancel: #1baf7a;
+  --s-net: #4a3aa7;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --tick: #7a7a74;
+}
+
+.dark {
+  color-scheme: dark;
+  --page: 13 13 13;
+  --surface: 26 26 25;
+  --sunken: 36 36 34;
+  --ink: 245 245 243;
+  --ink-2: 195 194 183;
+  --ink-3: 137 135 129;
+  --line: 44 44 42;
+  --line-strong: 64 64 60;
+  --accent: 170 187 236;
+  --accent-ink: 16 19 28;
+  --accent-soft: 36 43 64;
+  --good: 12 163 12;
+  --warn: 250 178 25;
+  --bad: 230 103 103;
+
+  --s-sales: #3987e5;
+  --s-returns: #d95926;
+  --s-cancel: #199e70;
+  --s-net: #9085e9;
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --tick: #898781;
+}
+
+@layer base {
+  html {
+    font-family: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply bg-page text-ink text-sm;
+  }
+  :focus-visible {
+    outline: 2px solid rgb(var(--accent));
+    outline-offset: 1px;
+  }
+  input, select, textarea, button {
+    font: inherit;
+  }
+  ::selection {
+    background: rgb(var(--accent) / 0.2);
+  }
+}
+
+@layer components {
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+  .field {
+    @apply h-8 w-full rounded border border-line-strong bg-surface px-2 text-sm text-ink placeholder:text-ink-3;
+  }
+  .field:disabled {
+    @apply bg-sunken text-ink-3;
+  }
+  .label {
+    @apply mb-1 block truncate text-xs font-medium text-ink-2;
+  }
+  .th {
+    @apply whitespace-nowrap border-b border-line-strong bg-sunken px-2.5 py-1.5 text-left text-xs font-medium text-ink-2;
+  }
+  .td {
+    @apply whitespace-nowrap border-b border-line px-2.5 py-1.5 text-[0.8125rem];
+  }
+}
+
+.recharts-surface:focus,
+.recharts-wrapper:focus,
+.recharts-wrapper *:focus {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

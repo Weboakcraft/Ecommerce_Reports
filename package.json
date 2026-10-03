@@ -1,0 +1,48 @@
+{
+  "name": "ecom-analytics-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "E-commerce analytics & profitability dashboard (Flipkart first) with a Google Sheets backend",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "fixture": "tsx scripts/make-fixture.ts",
+    "smoke": "tsx scripts/smoke.ts"
+  },
+  "dependencies": {
+    "@fontsource/ibm-plex-sans": "5.3.0",
+    "@tanstack/react-virtual": "3.14.13",
+    "exceljs": "4.4.0",
+    "jspdf": "4.2.1",
+    "jspdf-autotable": "5.0.8",
+    "lucide-react": "1.50.0",
+    "papaparse": "5.7.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "recharts": "2.15.4",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
+    "zustand": "5.0.15"
+  },
+  "devDependencies": {
+    "@types/papaparse": "5.5.2",
+    "@types/react": "18.3.31",
+    "@types/react-dom": "18.3.7",
+    "@vitejs/plugin-react": "4.7.0",
+    "autoprefixer": "10.6.1",
+    "playwright": "1.56.0",
+    "postcss": "8.5.28",
+    "tailwindcss": "3.4.19",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "vite": "5.4.21",
+    "vitest": "2.1.9"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
