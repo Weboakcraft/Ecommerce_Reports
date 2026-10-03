@@ -1,0 +1,32 @@
+name: Unpack zip to repository root (one-time)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unzip and move all files to the root
+        run: |
+          set -e
+          if [ ! -f ecom-analytics-dashboard.zip ]; then echo "Zip not found - nothing to do"; exit 0; fi
+          unzip -q ecom-analytics-dashboard.zip -d /tmp/unz
+          SRC=/tmp/unz/ecom-analytics-dashboard
+          # Workflow files cannot be pushed with GITHUB_TOKEN; deploy.yml is added separately.
+          rm -rf "$SRC/.github"
+          cp -a "$SRC/." .
+          git rm -q ecom-analytics-dashboard.zip
+          sed -i 's#^VITE_DEFAULT_SHEETS_URL=$#VITE_DEFAULT_SHEETS_URL=https://script.google.com/macros/s/AKfycbzamJbird_KELvRApFCOGknm40D62krh-j0TBT7gc8GIfwNlIhBNCnLkuMC4pahfmg/exec#' .env.example
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git status --short | head -200
+          git commit -m "Unzip ecom-analytics-dashboard.zip into repository root"
+          git push
