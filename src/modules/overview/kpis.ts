@@ -54,6 +54,13 @@ export function buildKpis(a: Analytics): Kpi[] {
       formula: 'Sum of the absolute taxable value of all transactions classified as Return, shown as a positive amount. Counted on the return’s own invoice date.',
     },
     {
+      id: 'cvalue', label: 'Cancellation Value', kind: 'money', value: t.cancellationValue, prev: p?.cancellationValue ?? null, goodWhen: 'down',
+      formula: reversal
+        ? 'Sum of the absolute taxable value of all transactions classified as Cancellation, shown as a positive amount. Cancellation policy: subtracted from Net Sales.'
+        : 'Sum of the absolute taxable value of all transactions classified as Cancellation, shown as a positive amount. Cancellation policy: reported separately, not subtracted from Net Sales.',
+      footnote: t.cancellationRows > 0 ? `${fmtInt(t.cancellationRows)} cancellation row(s).` : undefined,
+    },
+    {
       id: 'net', label: 'Net Sales Value', kind: 'money', value: t.netSalesValue, prev: p?.netSalesValue ?? null, goodWhen: 'up',
       formula: netFormula,
       footnote: t.cancellationValue > 0 ? `Cancellation value ${fmtINR(t.cancellationValue)} ${reversal ? 'subtracted' : 'reported separately'}.` : undefined,
@@ -65,6 +72,11 @@ export function buildKpis(a: Analytics): Kpi[] {
     {
       id: 'runits', label: 'Returned Units', kind: 'int', value: t.returnedUnits, prev: p?.returnedUnits ?? null, goodWhen: 'down',
       formula: 'Sum of the absolute item quantity of all Return transactions.',
+    },
+    {
+      id: 'cunits', label: 'Cancelled Units', kind: 'int', value: t.cancelledUnits, prev: p?.cancelledUnits ?? null, goodWhen: 'down',
+      formula: 'Sum of the absolute item quantity of all Cancellation transactions.',
+      footnote: t.grossSoldUnits > 0 && t.cancelledUnits > 0 ? `${fmtPct((t.cancelledUnits / t.grossSoldUnits) * 100)} of gross sold units.` : undefined,
     },
     {
       id: 'nunits', label: 'Net Units', kind: 'int', value: t.netUnits, prev: p?.netUnits ?? null, goodWhen: 'up',
