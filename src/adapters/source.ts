@@ -34,6 +34,35 @@ export function detectFileKind(bytes: Uint8Array, fileName: string): FileKind {
   return 'csv';
 }
 
+/**
+ * The range actually covered by cells. The sheet's own "dimension" (`!ref`) is
+ * NOT trusted on its own: some exports (including Flipkart's Sales Report)
+ * write <dimension ref="A1:BH1"/> although the sheet holds thousands of rows,
+ * which would make every data row invisible.
+ */
+function usedRange(ws: XLSX.WorkSheet, dense: (XLSX.CellObject | undefined)[][] | undefined): XLSX.Range {
+  const ref = ws['!ref'];
+  const range = ref ? XLSX.utils.decode_range(ref) : { s: { r: 0, c: 0 }, e: { r: -1, c: -1 } };
+  let maxR = range.e.r;
+  let maxC = range.e.c;
+  if (dense) {
+    for (let r = 0; r < dense.length; r++) {
+      const row = dense[r];
+      if (!row) continue;
+      if (row.length && r > maxR) maxR = r;
+      if (row.length - 1 > maxC) maxC = row.length - 1;
+    }
+  } else {
+    for (const key of Object.keys(ws)) {
+      if (key.charAt(0) === '!') continue;
+      const a = XLSX.utils.decode_cell(key);
+      if (a.r > maxR) maxR = a.r;
+      if (a.c > maxC) maxC = a.c;
+    }
+  }
+  return { s: range.s, e: { r: maxR, c: maxC } };
+}
+
 function excelSource(data: ArrayBuffer): WorkbookSource {
   let names: string[];
   try {
@@ -58,10 +87,9 @@ function excelSource(data: ArrayBuffer): WorkbookSource {
       }
       const ws = wb.Sheets[sheetName];
       if (!ws) throw new FileValidationError(`Sheet "${sheetName}" could not be read.`);
-      const ref = ws['!ref'];
-      const range = ref ? XLSX.utils.decode_range(ref) : { s: { r: 0, c: 0 }, e: { r: -1, c: -1 } };
       const date1904 = !!wb.Workbook?.WBProps?.date1904;
       const dense = (ws as unknown as { '!data'?: (XLSX.CellObject | undefined)[][] })['!data'];
+      const range = usedRange(ws, dense);
       const read = (r: number, c: number): XLSX.CellObject | undefined =>
         dense ? dense[r]?.[c] : (ws[XLSX.utils.encode_cell({ r, c })] as XLSX.CellObject | undefined);
       return {
