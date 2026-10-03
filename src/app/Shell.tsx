@@ -32,6 +32,7 @@ export function Shell({
   const s = useStore();
   const [menu, setMenu] = useState(false);
   const incomplete = s.batches.filter((b) => b.status === 'incomplete');
+  const loading = s.status === 'loading';
   useEffect(() => {
     document.documentElement.classList.toggle('dark', s.theme === 'dark');
   }, [s.theme]);
@@ -71,16 +72,18 @@ export function Shell({
     <button
       type="button"
       onClick={() => onNavigate('settings')}
-      title={s.mode === 'sheets' ? 'Data is saved to your Google Spreadsheet' : 'Data is stored only in this browser. Connect Google Sheets in Settings.'}
+      title={loading ? 'Data Loading...' : s.mode === 'sheets' ? 'Data is saved to your Google Spreadsheet' : 'Data is stored only in this browser. Connect Google Sheets in Settings.'}
       className={cx(
         'flex w-full items-center gap-2 rounded border px-2 py-1.5 text-left text-xs',
-        s.mode === 'sheets' ? 'border-line text-ink-2' : 'border-warn/40 bg-warn/5 text-ink',
+        loading || s.mode === 'sheets' ? 'border-line text-ink-2' : 'border-warn/40 bg-warn/5 text-ink',
       )}
     >
-      {s.mode === 'sheets' ? <Database size={14} className="shrink-0 text-good" /> : <HardDrive size={14} className="shrink-0 text-warn" />}
+      {loading
+        ? <RefreshCw size={14} className="shrink-0 animate-spin text-ink-3" />
+        : s.mode === 'sheets' ? <Database size={14} className="shrink-0 text-good" /> : <HardDrive size={14} className="shrink-0 text-warn" />}
       <span className="min-w-0">
-        <span className="block font-medium">{s.mode === 'sheets' ? 'Google Sheets' : 'This browser only'}</span>
-        <span className="block truncate text-ink-3">{s.mode === 'sheets' ? s.spreadsheetName || 'Connected' : 'Not saved to a spreadsheet'}</span>
+        <span className="block font-medium">{loading ? 'Data Loading...' : s.mode === 'sheets' ? 'Google Sheets' : 'This browser only'}</span>
+        {!loading && <span className="block truncate text-ink-3">{s.mode === 'sheets' ? s.spreadsheetName || 'Connected' : 'Not saved to a spreadsheet'}</span>}
       </span>
     </button>
   );
@@ -90,7 +93,7 @@ export function Shell({
       <aside className="no-print hidden w-56 shrink-0 flex-col border-r border-line bg-surface lg:flex">
         <div className="flex h-12 items-center gap-2 border-b border-line px-4">
           <span className="flex h-6 w-6 items-center justify-center rounded bg-accent text-accent-ink"><Gauge size={14} /></span>
-          <span className="text-sm font-semibold tracking-tight">Marketplace Analytics</span>
+          <span className="text-sm font-semibold tracking-tight">Ecom Analytics</span>
         </div>
         <div className="flex-1 overflow-y-auto">{nav}</div>
         <div className="border-t border-line p-2">{source}</div>
@@ -101,7 +104,7 @@ export function Shell({
           <div className="absolute inset-0 bg-black/40" onClick={() => setMenu(false)} />
           <aside className="absolute inset-y-0 left-0 flex w-64 flex-col bg-surface shadow-xl">
             <div className="flex h-12 items-center justify-between border-b border-line px-4">
-              <span className="text-sm font-semibold">Marketplace Analytics</span>
+              <span className="text-sm font-semibold">Ecom Analytics</span>
               <button type="button" aria-label="Close menu" onClick={() => setMenu(false)} className="rounded p-1 text-ink-2"><X size={16} /></button>
             </div>
             <div className="flex-1 overflow-y-auto">{nav}</div>
@@ -118,7 +121,7 @@ export function Shell({
           </div>
           <div className="flex items-center gap-1">
             <span className="hidden text-xs text-ink-3 sm:inline">Times in {s.settings.reportingTimezone}</span>
-            <Button variant="ghost" size="sm" onClick={() => void s.reload()} title="Reload data from storage" aria-label="Reload data"><RefreshCw size={14} /></Button>
+            <Button variant="ghost" size="sm" onClick={() => void s.reload()} disabled={loading} title="Reload data from storage" aria-label="Reload data"><RefreshCw size={14} /></Button>
             <Button variant="ghost" size="sm" onClick={s.toggleTheme} aria-label={s.theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}>
               {s.theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
             </Button>
@@ -152,7 +155,7 @@ export function Shell({
         <main className="min-w-0 flex-1 px-4 py-4 lg:px-6">{children}</main>
       </div>
 
-      {s.busy && (
+      {s.busy && !loading && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4" role="alertdialog" aria-label={s.busy.label} aria-busy="true">
           <div className="w-full max-w-sm rounded-md border border-line-strong bg-surface p-4 shadow-xl">
             <p className="mb-2 text-sm font-medium">{s.busy.label}…</p>

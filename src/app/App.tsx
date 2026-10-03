@@ -36,13 +36,16 @@ export default function App() {
   }, [init]);
 
   if (status === 'loading') {
+    // The site opens straight away; only the content area waits for the data.
     return (
-      <div className="flex min-h-screen items-center justify-center p-6">
-        <div className="w-full max-w-sm">
-          <p className="mb-2 text-sm font-medium">{busy?.label ?? 'Loading your data'}…</p>
-          <ProgressBar value={busy?.progress ?? null} />
+      <Shell page={page} onNavigate={navigate} filterBar={null}>
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <div className="w-full max-w-sm" role="status" aria-live="polite">
+            <p className="mb-2 text-sm font-medium">Data Loading...</p>
+            <ProgressBar value={busy?.progress ?? null} />
+          </div>
         </div>
-      </div>
+      </Shell>
     );
   }
 
