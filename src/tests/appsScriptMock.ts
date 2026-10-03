@@ -25,7 +25,8 @@ class MockRange {
         const fmt = this.sheet.formats[this.r - 1 + i]?.[this.c - 1 + j];
         let v = values[i][j];
         if (typeof v === 'string' && v.length > 50000) throw new Error('Your input contains more than the maximum of 50000 characters in a single cell.');
-        if (typeof v === 'string' && v.startsWith('=') && fmt !== '@') throw new Error('MOCK: a formula would have been evaluated');
+        // Real Sheets evaluates "=..." passed to setValues even in a plain-text ('@') cell.
+        if (typeof v === 'string' && v.startsWith('=')) throw new Error('MOCK: a formula would have been evaluated');
         // Sheets consumes one leading apostrophe as a text marker.
         if (typeof v === 'string' && v.startsWith("'")) v = v.slice(1);
         // In a number-formatted cell a numeric string becomes a number; in a text cell a number is shown as text.
