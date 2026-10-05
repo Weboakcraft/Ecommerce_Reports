@@ -5,7 +5,7 @@ import { reclassify, summarizeEvents } from '../../analytics/transactions/classi
 import { DataTable, type Column } from '../../components/ui/DataTable';
 import { Badge, Button, ConfirmDialog, Field, Notice, PageHeader, Panel, Tabs } from '../../components/ui';
 import { DEFAULT_SETTINGS } from '../../schemas/defaults';
-import { validateSheetsUrl } from '../../storage/sheetsClient';
+import { buildShareLink, validateSheetsUrl } from '../../storage/sheetsClient';
 import { useStore } from '../../storage/store';
 import {
   PLATFORM_LABEL, PLATFORMS, type AuditEntry, type EventMapping, type Platform, type Settings, type SkuAlias, type TxnType,
@@ -31,6 +31,16 @@ export default function SettingsPage() {
   const [token, setToken] = useState('');
   const [upload, setUpload] = useState(true);
   const [confirm, setConfirm] = useState<'disconnect' | 'clear' | null>(null);
+  const [copied, setCopied] = useState<'ok' | 'fail' | null>(null);
+  const shareLink = s.connection ? buildShareLink(s.connection) : '';
+  const copyShareLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareLink);
+      setCopied('ok');
+    } catch {
+      setCopied('fail');
+    }
+  };
   const [mapDraft, setMapDraft] = useState<EventMapping[]>(s.mappings);
   const [alias, setAlias] = useState<SkuAlias>({ platform: 'flipkart', platformSku: '', canonicalProductId: '' });
   const tz = s.settings.reportingTimezone;
@@ -118,6 +128,13 @@ export default function SettingsPage() {
                 <div className="flex gap-2">
                   <Button onClick={() => void s.reload()}>Reload from spreadsheet</Button>
                   <Button variant="danger" onClick={() => setConfirm('disconnect')}>Disconnect</Button>
+                </div>
+                <div className="space-y-2 border-t border-line pt-3">
+                  <p className="text-[0.8125rem] font-medium">Share with your team</p>
+                  <p className="text-xs leading-relaxed text-ink-3">Anyone who opens this link sees the same data, with full access (import, edit, delete). Share it only with people you trust. To revoke it, create a new access token in the spreadsheet and send a fresh link.</p>
+                  <Button variant="primary" onClick={() => void copyShareLink()}>Copy share link</Button>
+                  {copied === 'ok' && <p className="text-xs text-good">Link copied. Send it to your team.</p>}
+                  {copied === 'fail' && <input className="field text-xs" readOnly value={shareLink} onFocus={(e) => e.currentTarget.select()} />}
                 </div>
               </div>
             ) : (
