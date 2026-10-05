@@ -147,3 +147,39 @@ describe('store + Google Sheets backend', () => {
     expect(env.call('bootstrap').data.audit.length).toBeGreaterThan(0);
   });
 });
+
+describe('share link', () => {
+  it('a browser with no saved connection opens a share link and sees the spreadsheet data', async () => {
+    const env = install();
+    env.call('replaceTable', { table: 'ProductCosts', rows: [[ 'a', '', 'A', 'all', '2026-01-01', '', 400, 50, 0, '', 't', '' ]] });
+    const { buildShareLink } = await import('../storage/sheetsClient');
+    const link = buildShareLink({ url: URL, token: env.token }, 'https://example.github.io/Ecommerce_Reports/');
+    expect(link).not.toContain(env.token); // token is encoded, not in plain text
+    localStorage.removeItem('ecom-analytics.sheets-connection'); // a different user's browser
+
+    const hash = link.slice(link.indexOf('#'));
+    const loc = { hash, pathname: '/Ecommerce_Reports/', search: '' };
+    vi.stubGlobal('window', {
+      location: loc,
+      history: { replaceState: (_s: unknown, _t: string, u: string) => { loc.hash = u.slice(u.indexOf('#')); } },
+    });
+
+    const useStore = await freshStore();
+    await useStore.getState().init();
+    const st = useStore.getState();
+    expect(st.mode).toBe('sheets');
+    expect(st.loadFailed).toBe(false);
+    expect(st.costs).toHaveLength(1);
+    expect(loc.hash).toBe('#/overview'); // token removed from the address bar
+    expect(JSON.parse(localStorage.getItem('ecom-analytics.sheets-connection')!)).toEqual({ url: URL, token: env.token });
+  });
+
+  it('a malformed share link is ignored', async () => {
+    install();
+    localStorage.removeItem('ecom-analytics.sheets-connection');
+    vi.stubGlobal('window', { location: { hash: '#/overview?connect=@@bad', pathname: '/', search: '' }, history: { replaceState: () => undefined } });
+    const useStore = await freshStore();
+    await useStore.getState().init();
+    expect(useStore.getState().mode).toBe('local');
+  });
+});
