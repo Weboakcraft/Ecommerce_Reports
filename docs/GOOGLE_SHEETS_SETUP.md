@@ -81,3 +81,16 @@ If the script is not created from inside the spreadsheet, add a script property
 `SPREADSHEET_ID` (Project Settings → Script properties) with the spreadsheet's
 id. The custom menu is not available then; run `setup`, `showToken` and
 `rotateToken` from the Apps Script editor and read the token in the execution log.
+
+## Sharing the dashboard with your team
+
+The connection (web app URL + token) is saved in each browser separately, so a
+colleague who opens the plain site address sees an empty dashboard. To give
+them the same data, open **Settings → Google Sheets → Copy share link** and send
+them that link. Opening it connects their browser to the spreadsheet once; after
+that the plain site address works for them too.
+
+The link carries the access token (in the `#` part of the URL, which is never
+sent to the web server), so anyone who has it can view **and change** the data.
+To cut off everyone who has the link, use **Analytics Backend → Create a new
+access token**, reconnect, and send a fresh link.
