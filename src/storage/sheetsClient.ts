@@ -102,6 +102,48 @@ export function loadConnection(): SheetsConnection | null {
   }
 }
 
+const SHARE_PARAM = 'connect';
+
+const toBase64Url = (s: string) =>
+  btoa(String.fromCharCode(...new TextEncoder().encode(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const fromBase64Url = (s: string) => {
+  const b64 = s.replace(/-/g, '+').replace(/_/g, '/');
+  const bin = atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4));
+  return new TextDecoder().decode(Uint8Array.from(bin, (ch) => ch.charCodeAt(0)));
+};
+
+/**
+ * A link that connects any browser to the same spreadsheet. The connection travels
+ * in the URL fragment (#…), which browsers never send to the web server.
+ * Anyone holding the link has the same access as the token: treat it like a password.
+ */
+export function buildShareLink(c: SheetsConnection, base: string = window.location.origin + window.location.pathname): string {
+  return `${base}#/overview?${SHARE_PARAM}=${toBase64Url(JSON.stringify({ url: c.url, token: c.token }))}`;
+}
+
+/** Reads a connection from a share link in the address bar, then removes it from the address bar. */
+export function consumeShareLink(): SheetsConnection | null {
+  try {
+    const hash = window.location.hash;
+    const q = hash.indexOf('?');
+    if (q < 0) return null;
+    const params = new URLSearchParams(hash.slice(q + 1));
+    const raw = params.get(SHARE_PARAM);
+    if (!raw) return null;
+    params.delete(SHARE_PARAM);
+    const rest = params.toString();
+    const cleaned = hash.slice(0, q) + (rest ? `?${rest}` : '');
+    window.history.replaceState(null, '', window.location.pathname + window.location.search + cleaned);
+    const c = JSON.parse(fromBase64Url(raw)) as Partial<SheetsConnection>;
+    const url = String(c.url ?? '').trim();
+    const token = String(c.token ?? '').trim();
+    if (!url || !token || validateSheetsUrl(url)) return null;
+    return { url, token };
+  } catch {
+    return null;
+  }
+}
+
 export function saveConnection(c: SheetsConnection | null): void {
   try {
     if (c) localStorage.setItem(KEY, JSON.stringify(c));

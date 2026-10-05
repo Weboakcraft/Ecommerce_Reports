@@ -11,7 +11,7 @@ import {
   settingsToRows, txnToRow,
 } from './codec';
 import { idbDel, idbGet, idbSet } from './localDb';
-import { loadConnection, saveConnection, SheetsClient, type SheetsConnection } from './sheetsClient';
+import { consumeShareLink, loadConnection, saveConnection, SheetsClient, type SheetsConnection } from './sheetsClient';
 
 const LOCAL_KEY = 'local-state';
 const CACHE_KEY = 'sheets-cache';
@@ -269,7 +269,16 @@ export const useStore = create<AppState>((set, get) => {
     theme: loadTheme(),
 
     async init() {
-      const conn = loadConnection();
+      // A share link (#/…?connect=…) connects this browser to the same spreadsheet.
+      const shared = consumeShareLink();
+      if (shared) {
+        const prev = loadConnection();
+        if (!prev || prev.url !== shared.url || prev.token !== shared.token) {
+          saveConnection(shared);
+          await idbDel(CACHE_KEY);
+        }
+      }
+      const conn = shared ?? loadConnection();
       if (!conn) {
         await loadLocal();
         return;
